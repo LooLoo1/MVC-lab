@@ -1,60 +1,169 @@
 <%- include('../partials/header') %>
 
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col">
-            <h1><%= project.title %></h1>
-            <p class="text-muted">
-                Created by <%= project.owner.name %> on <%= new Date(project.createdAt).toLocaleDateString() %>
-            </p>
-        </div>
-        <div class="col text-end">
-            <% if (project.owner._id.toString() === userId) { %>
-                <a href="/projects/<%= project._id %>/edit" class="btn btn-warning">Edit Project</a>
-                <form action="/projects/<%= project._id %>?_method=DELETE" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this project?')">Delete Project</button>
-                </form>
-            <% } %>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Project Header -->
+    <div class="bg-white shadow sm:rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900"><%= project.title %></h1>
+                    <p class="mt-2 text-sm text-gray-500">
+                        Created by <%= project.owner.name %> on <%= new Date(project.createdAt).toLocaleDateString() %>
+                    </p>
+                </div>
+                <% if (project.owner._id.toString() === userId) { %>
+                    <div class="flex space-x-3">
+                        <a href="/projects/<%= project._id %>/edit" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-edit mr-2"></i>
+                            Edit Project
+                        </a>
+                        <form action="/projects/<%= project._id %>?_method=DELETE" method="POST" class="inline">
+                            <button type="submit" 
+                                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                    onclick="return confirm('Are you sure you want to delete this project?')">
+                                <i class="fas fa-trash mr-2"></i>
+                                Delete Project
+                            </button>
+                        </form>
+                    </div>
+                <% } %>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Description</h5>
-                    <p class="card-text"><%= project.description %></p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Description -->
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Description</h3>
+                    <p class="text-gray-600"><%= project.description %></p>
                 </div>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Project Details</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Status:</strong> 
-                                <span class="badge bg-<%= project.status === 'completed' ? 'success' : 
-                                                    project.status === 'in-progress' ? 'primary' : 
-                                                    project.status === 'on-hold' ? 'warning' : 'secondary' %>">
-                                    <%= project.status.charAt(0).toUpperCase() + project.status.slice(1) %>
-                                </span>
+            <!-- Project Details -->
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Project Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Status</p>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                <%= project.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                    project.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 
+                                    project.status === 'on-hold' ? 'bg-yellow-100 text-yellow-800' : 
+                                    'bg-gray-100 text-gray-800' %>">
+                                <%= project.status.charAt(0).toUpperCase() + project.status.slice(1) %>
+                            </span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Deadline</p>
+                            <p class="text-sm font-medium text-gray-900">
+                                <%= new Date(project.deadline).toLocaleDateString() %>
                             </p>
-                            <p><strong>Deadline:</strong> <%= new Date(project.deadline).toLocaleDateString() %></p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Project Owner</h5>
-                    <p class="card-text">
-                        <strong>Name:</strong> <%= project.owner.name %><br>
-                        <strong>Email:</strong> <%= project.owner.email %>
-                    </p>
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Project Members -->
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Project Members</h3>
+                        <% if (project.owner._id.toString() === userId) { %>
+                            <button type="button" 
+                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    onclick="document.getElementById('addMemberModal').classList.remove('hidden')">
+                                <i class="fas fa-plus mr-2"></i>
+                                Add Member
+                            </button>
+                        <% } %>
+                    </div>
+                    <div class="space-y-4">
+                        <!-- Project Owner -->
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-crown text-yellow-500 text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-900"><%= project.owner.name %></p>
+                                    <p class="text-sm text-gray-500">Project Owner</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Project Members -->
+                        <% if (project.members && project.members.length > 0) { %>
+                            <% project.members.forEach(member => { %>
+                                <div class="flex items-center justify-between p-4 bg-white border rounded-lg">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-user text-gray-400 text-xl"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <p class="text-sm font-medium text-gray-900"><%= member.name %></p>
+                                            <p class="text-sm text-gray-500">Member</p>
+                                        </div>
+                                    </div>
+                                    <% if (project.owner._id.toString() === userId) { %>
+                                        <form action="/projects/<%= project._id %>/members/<%= member._id %>?_method=DELETE" method="POST" class="inline">
+                                            <button type="submit" 
+                                                    class="text-red-600 hover:text-red-900"
+                                                    onclick="return confirm('Are you sure you want to remove this member?')">
+                                                <i class="fas fa-minus-circle"></i>
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="text-sm text-gray-500 text-center py-4">No additional members yet</p>
+                        <% } %>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Member Modal -->
+<div id="addMemberModal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Add Project Member</h3>
+                <form action="/projects/<%= project._id %>/members" method="POST" class="mt-4">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <div class="mt-1">
+                                <input type="email" name="email" id="email" required
+                                       class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                       placeholder="Enter member's email">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                        <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
+                            Add Member
+                        </button>
+                        <button type="button"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                                onclick="document.getElementById('addMemberModal').classList.add('hidden')">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

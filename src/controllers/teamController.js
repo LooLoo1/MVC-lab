@@ -1,18 +1,77 @@
 const Team = require('../models/Team');
 const User = require('../models/User');
 const Project = require('../models/Project');
+const notificationController = require('./notificationController');
+const Notification = require('../models/Notification');
 
 // Get all teams
 exports.getAllTeams = async (req, res) => {
     try {
-        const teams = await Team.find()
+        const { search, status, sort } = req.query;
+        let query = {
+            $or: [
+                { leader: req.session.userId },
+                { 'members.user': req.session.userId }
+            ]
+        };
+
+        // Search by name or description
+        if (search) {
+            query.$and = [{
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } }
+                ]
+            }];
+        }
+
+        // Filter by status (active/inactive)
+        if (status) {
+            query.status = status;
+        }
+
+        // Build sort object
+        let sortObj = { createdAt: -1 }; // Default sort by newest
+        if (sort) {
+            switch (sort) {
+                case 'name_asc':
+                    sortObj = { name: 1 };
+                    break;
+                case 'name_desc':
+                    sortObj = { name: -1 };
+                    break;
+                case 'members_asc':
+                    sortObj = { 'members.length': 1 };
+                    break;
+                case 'members_desc':
+                    sortObj = { 'members.length': -1 };
+                    break;
+            }
+        }
+
+        const teams = await Team.find(query)
+            .sort(sortObj)
             .populate('leader', 'name email')
-            .populate('members.user', 'name email')
-            .populate('projects', 'title status');
-        res.render('teams/index', { teams });
+            .populate('members.user', 'name email');
+
+        // Get team statistics
+        const stats = {
+            total: teams.length,
+            active: teams.filter(t => t.status === 'active').length,
+            inactive: teams.filter(t => t.status === 'inactive').length
+        };
+
+        res.render('teams/index', { 
+            teams,
+            stats,
+            search,
+            status,
+            sort,
+            userId: req.session.userId
+        });
     } catch (error) {
-        req.session.error = 'Error fetching teams';
-        res.redirect('/');
+        console.error('Error fetching teams:', error);
+        res.status(500).render('error', { error });
     }
 };
 
@@ -49,22 +108,24 @@ exports.getTeam = async (req, res) => {
         const team = await Team.findById(req.params.id)
             .populate('leader', 'name email')
             .populate('members.user', 'name email')
-            .populate('projects', 'title status deadline');
-        
+            .populate('projects', 'name description');
+
         if (!team) {
-            req.session.error = 'Team not found';
+            req.flash('error', 'Team not found');
             return res.redirect('/teams');
         }
-        
-        // Get available projects for this team
-        const availableProjects = await Project.find({
-            _id: { $nin: team.projects },
-            owner: req.user._id
+
+        // Check if current user is the team leader
+        const isLeader = team.leader && team.leader._id.toString() === req.session.userId;
+
+        res.render('teams/show', {
+            team,
+            isLeader,
+            title: team.name
         });
-        
-        res.render('teams/show', { team, availableProjects });
     } catch (error) {
-        req.session.error = 'Error fetching team details';
+        console.error('Error fetching team:', error);
+        req.flash('error', 'Error fetching team details');
         res.redirect('/teams');
     }
 };
@@ -163,101 +224,170 @@ exports.addMember = async (req, res) => {
     try {
         const { email, role } = req.body;
         const team = await Team.findById(req.params.id);
-        
+
         if (!team) {
-            req.session.error = 'Team not found';
-            return res.redirect('/teams');
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Team not found' 
+            });
         }
-        
-        // Check if user is team leader or admin
-        const isLeader = team.leader.toString() === req.user._id.toString();
-        const isAdmin = team.members.some(member => 
-            member.user.toString() === req.user._id.toString() && 
-            member.role === 'admin'
-        );
-        
-        if (!isLeader && !isAdmin) {
-            req.session.error = 'You do not have permission to add members';
-            return res.redirect('/teams');
+
+        // Check if user is team leader
+        if (team.leader.toString() !== req.session.userId) {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Not authorized to add members' 
+            });
         }
-        
+
+        // Find user by email
         const user = await User.findOne({ email });
         if (!user) {
-            req.session.error = 'User not found';
-            return res.redirect(`/teams/${team._id}`);
+            return res.status(404).json({ 
+                success: false, 
+                error: 'User not found' 
+            });
         }
-        
+
+        // Check if user is already a member
+        if (team.members.some(member => member.user.toString() === user._id.toString())) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'User is already a member of this team' 
+            });
+        }
+
+        // Add member to team
         await team.addMember(user._id, role);
-        req.session.success = 'Member added successfully';
-        res.redirect(`/teams/${team._id}`);
+
+        // Create notification for the new member
+        await Notification.create({
+            recipient: user._id,
+            sender: req.session.userId,
+            team: team._id,
+            type: 'team_invite',
+            title: 'Team Invitation',
+            message: `You have been invited to join the team "${team.name}"`,
+            link: `/teams/${team._id}`
+        });
+
+        res.json({ 
+            success: true,
+            message: 'Member added successfully'
+        });
     } catch (error) {
-        req.session.error = 'Error adding member';
-        res.redirect('/teams');
+        console.error('Error adding team member:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to add team member' 
+        });
     }
 };
 
 // Remove member from team
 exports.removeMember = async (req, res) => {
     try {
-        const { memberId } = req.params;
         const team = await Team.findById(req.params.id);
-        
         if (!team) {
-            req.session.error = 'Team not found';
-            return res.redirect('/teams');
+            return res.status(404).json({ error: 'Team not found' });
         }
-        
-        // Check if user is team leader or admin
-        const isLeader = team.leader.toString() === req.user._id.toString();
-        const isAdmin = team.members.some(member => 
-            member.user.toString() === req.user._id.toString() && 
-            member.role === 'admin'
-        );
-        
-        if (!isLeader && !isAdmin) {
-            req.session.error = 'You do not have permission to remove members';
-            return res.redirect('/teams');
+
+        // Check if user has permission
+        if (team.leader._id.toString() !== req.user._id.toString() && 
+            !team.members.some(m => m.user._id.toString() === req.user._id.toString() && m.role === 'admin')) {
+            return res.status(403).json({ error: 'Not authorized to remove members' });
         }
+
+        const memberId = req.params.memberId;
+        const member = team.members.find(m => m.user._id.toString() === memberId);
         
-        await team.removeMember(memberId);
-        req.session.success = 'Member removed successfully';
-        res.redirect(`/teams/${team._id}`);
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Don't allow removing the team leader
+        if (memberId === team.leader._id.toString()) {
+            return res.status(400).json({ error: 'Cannot remove team leader' });
+        }
+
+        team.members = team.members.filter(m => m.user._id.toString() !== memberId);
+        await team.save();
+
+        // Send notification to the removed member
+        await notificationController.createNotification({
+            recipient: memberId,
+            sender: req.user._id,
+            type: 'status_update',
+            title: 'Team Membership Update',
+            message: `You have been removed from the team "${team.name}"`,
+            team: team._id
+        });
+
+        res.json({ success: true });
     } catch (error) {
-        req.session.error = 'Error removing member';
-        res.redirect('/teams');
+        res.status(500).json({ error: 'Error removing member' });
     }
 };
 
 // Add project to team
 exports.addProject = async (req, res) => {
     try {
-        const { projectId } = req.body;
         const team = await Team.findById(req.params.id);
-        
         if (!team) {
             req.session.error = 'Team not found';
             return res.redirect('/teams');
         }
-        
-        // Check if user is team leader or admin
-        const isLeader = team.leader.toString() === req.user._id.toString();
-        const isAdmin = team.members.some(member => 
-            member.user.toString() === req.user._id.toString() && 
-            member.role === 'admin'
-        );
-        
-        if (!isLeader && !isAdmin) {
-            req.session.error = 'You do not have permission to add projects';
+
+        // Check if user has permission
+        if (team.leader._id.toString() !== req.user._id.toString() && 
+            !team.members.some(m => m.user._id.toString() === req.user._id.toString() && m.role === 'admin')) {
+            req.session.error = 'Not authorized to add projects';
             return res.redirect('/teams');
         }
-        
+
+        const { projectId } = req.body;
         const project = await Project.findById(projectId);
+        
         if (!project) {
             req.session.error = 'Project not found';
-            return res.redirect(`/teams/${team._id}`);
+            return res.redirect('/teams');
         }
-        
-        await team.addProject(projectId);
+
+        // Check if project is already assigned to the team
+        if (team.projects.includes(projectId)) {
+            req.session.error = 'Project is already assigned to this team';
+            return res.redirect('/teams');
+        }
+
+        team.projects.push(projectId);
+        await team.save();
+
+        // Send notifications to all team members
+        const notifications = team.members.map(member => ({
+            recipient: member.user,
+            sender: req.user._id,
+            type: 'project_assigned',
+            title: 'New Project Assigned',
+            message: `Project "${project.title}" has been assigned to your team "${team.name}"`,
+            link: `/projects/${project._id}`,
+            team: team._id,
+            project: project._id
+        }));
+
+        // Also notify the team leader
+        notifications.push({
+            recipient: team.leader._id,
+            sender: req.user._id,
+            type: 'project_assigned',
+            title: 'New Project Assigned',
+            message: `Project "${project.title}" has been assigned to your team "${team.name}"`,
+            link: `/projects/${project._id}`,
+            team: team._id,
+            project: project._id
+        });
+
+        await Promise.all(notifications.map(n => notificationController.createNotification(n)));
+
         req.session.success = 'Project added to team successfully';
         res.redirect(`/teams/${team._id}`);
     } catch (error) {
@@ -269,31 +399,53 @@ exports.addProject = async (req, res) => {
 // Remove project from team
 exports.removeProject = async (req, res) => {
     try {
-        const { projectId } = req.params;
         const team = await Team.findById(req.params.id);
-        
         if (!team) {
-            req.session.error = 'Team not found';
-            return res.redirect('/teams');
+            return res.status(404).json({ error: 'Team not found' });
         }
-        
-        // Check if user is team leader or admin
-        const isLeader = team.leader.toString() === req.user._id.toString();
-        const isAdmin = team.members.some(member => 
-            member.user.toString() === req.user._id.toString() && 
-            member.role === 'admin'
-        );
-        
-        if (!isLeader && !isAdmin) {
-            req.session.error = 'You do not have permission to remove projects';
-            return res.redirect('/teams');
+
+        // Check if user has permission
+        if (team.leader._id.toString() !== req.user._id.toString() && 
+            !team.members.some(m => m.user._id.toString() === req.user._id.toString() && m.role === 'admin')) {
+            return res.status(403).json({ error: 'Not authorized to remove projects' });
         }
+
+        const projectId = req.params.projectId;
+        const project = await Project.findById(projectId);
         
-        await team.removeProject(projectId);
-        req.session.success = 'Project removed from team successfully';
-        res.redirect(`/teams/${team._id}`);
+        if (!project) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+
+        team.projects = team.projects.filter(p => p.toString() !== projectId);
+        await team.save();
+
+        // Send notifications to all team members
+        const notifications = team.members.map(member => ({
+            recipient: member.user,
+            sender: req.user._id,
+            type: 'status_update',
+            title: 'Project Removed',
+            message: `Project "${project.title}" has been removed from your team "${team.name}"`,
+            team: team._id,
+            project: project._id
+        }));
+
+        // Also notify the team leader
+        notifications.push({
+            recipient: team.leader._id,
+            sender: req.user._id,
+            type: 'status_update',
+            title: 'Project Removed',
+            message: `Project "${project.title}" has been removed from your team "${team.name}"`,
+            team: team._id,
+            project: project._id
+        });
+
+        await Promise.all(notifications.map(n => notificationController.createNotification(n)));
+
+        res.json({ success: true });
     } catch (error) {
-        req.session.error = 'Error removing project from team';
-        res.redirect('/teams');
+        res.status(500).json({ error: 'Error removing project from team' });
     }
 }; 

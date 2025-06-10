@@ -1,60 +1,187 @@
 <%- include('../partials/header') %>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Teams</h1>
-        <a href="/teams/create" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Create Team
-        </a>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between mb-6">
+        <div class="flex-1 min-w-0">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                Teams
+            </h2>
+        </div>
+        <div class="mt-4 flex md:mt-0 md:ml-4">
+            <a href="/teams/create" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-plus mr-2"></i>
+                Create Team
+            </a>
+        </div>
     </div>
 
-    <% if (teams && teams.length > 0) { %>
-        <div class="row">
-            <% teams.forEach(team => { %>
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title"><%= team.name %></h5>
-                            <p class="card-text"><%= team.description %></p>
-                            
-                            <div class="mb-3">
-                                <small class="text-muted">
-                                    <i class="fas fa-user"></i> Leader: <%= team.leader.name %>
-                                </small>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <small class="text-muted">
-                                    <i class="fas fa-users"></i> Members: <%= team.members.length %>
-                                </small>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <small class="text-muted">
-                                    <i class="fas fa-project-diagram"></i> Projects: <%= team.projects.length %>
-                                </small>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <a href="/teams/<%= team._id %>" class="btn btn-sm btn-outline-primary">
-                                View Details
-                            </a>
-                            <% if (team.leader._id.toString() === user._id.toString() || 
-                                  team.members.some(m => m.user._id.toString() === user._id.toString() && m.role === 'admin')) { %>
-                                <a href="/teams/<%= team._id %>/edit" class="btn btn-sm btn-outline-secondary">
-                                    Edit
-                                </a>
-                            <% } %>
-                        </div>
+    <!-- Statistics -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-users text-indigo-600 text-3xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Teams</dt>
+                            <dd class="text-lg font-semibold text-gray-900"><%= stats.total %></dd>
+                        </dl>
                     </div>
                 </div>
-            <% }); %>
+            </div>
         </div>
-    <% } else { %>
-        <div class="alert alert-info">
-            No teams found. Create your first team to get started!
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-green-600 text-3xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Active Teams</dt>
+                            <dd class="text-lg font-semibold text-gray-900"><%= stats.active %></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
         </div>
-    <% } %>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-project-diagram text-blue-600 text-3xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Teams with Projects</dt>
+                            <dd class="text-lg font-semibold text-gray-900"><%= stats.withProjects %></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-yellow-600 text-3xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Inactive Teams</dt>
+                            <dd class="text-lg font-semibold text-gray-900"><%= stats.inactive %></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6 mb-6">
+        <form action="/teams" method="GET" class="space-y-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
+                    <div class="mt-1">
+                        <input type="text" name="search" id="search" value="<%= search %>"
+                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                               placeholder="Search teams...">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                    <select id="status" name="status"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="">All Statuses</option>
+                        <option value="active" <%= status === 'active' ? 'selected' : '' %>>Active</option>
+                        <option value="inactive" <%= status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="sort" class="block text-sm font-medium text-gray-700">Sort By</label>
+                    <select id="sort" name="sort"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="">Newest First</option>
+                        <option value="name_asc" <%= sort === 'name_asc' ? 'selected' : '' %>>Name (A-Z)</option>
+                        <option value="name_desc" <%= sort === 'name_desc' ? 'selected' : '' %>>Name (Z-A)</option>
+                        <option value="members_desc" <%= sort === 'members_desc' ? 'selected' : '' %>>Most Members</option>
+                        <option value="members_asc" <%= sort === 'members_asc' ? 'selected' : '' %>>Least Members</option>
+                        <option value="projects_desc" <%= sort === 'projects_desc' ? 'selected' : '' %>>Most Projects</option>
+                        <option value="projects_asc" <%= sort === 'projects_asc' ? 'selected' : '' %>>Least Projects</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-search mr-2"></i>
+                    Search
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Teams List -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul role="list" class="divide-y divide-gray-200">
+            <% if (teams.length === 0) { %>
+                <li class="px-6 py-4 text-center text-gray-500">
+                    No teams found
+                </li>
+            <% } else { %>
+                <% teams.forEach(team => { %>
+                    <li class="hover:bg-gray-50 transition-colors duration-150">
+                        <a href="/teams/<%= team._id %>" class="block">
+                            <div class="px-4 py-4 sm:px-6">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <p class="text-sm font-medium text-indigo-600 truncate">
+                                            <%= team.name %>
+                                        </p>
+                                        <div class="ml-2 flex-shrink-0 flex">
+                                            <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= team.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' %>">
+                                                <%= team.status %>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="ml-2 flex-shrink-0 flex">
+                                        <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            <%= team.members.length + 1 %> members
+                                        </p>
+                                        <p class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                            <%= team.projects.length %> projects
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="mt-2 sm:flex sm:justify-between">
+                                    <div class="sm:flex">
+                                        <p class="flex items-center text-sm text-gray-500">
+                                            <i class="fas fa-user mr-1.5 text-gray-400"></i>
+                                            Leader: <%= team.leader.name %>
+                                        </p>
+                                    </div>
+                                    <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                        <i class="fas fa-calendar mr-1.5 text-gray-400"></i>
+                                        Created <%= new Date(team.createdAt).toLocaleDateString() %>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                <% }); %>
+            <% } %>
+        </ul>
+    </div>
 </div>
 
 <%- include('../partials/footer') %> 

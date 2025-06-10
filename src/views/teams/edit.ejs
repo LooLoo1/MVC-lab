@@ -1,32 +1,41 @@
 <%- include('../partials/header') %>
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="mb-0">Edit Team</h2>
-                </div>
-                <div class="card-body">
-                    <form action="/teams/<%= team._id %>" method="POST">
-                        <input type="hidden" name="_method" value="PUT">
-                        
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Team Name</label>
-                            <input type="text" class="form-control" id="name" name="name" value="<%= team.name %>" required>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Edit Team</h2>
+                
+                <form action="/teams/<%= team._id %>?_method=PUT" method="POST">
+                    <div class="space-y-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Team Name</label>
+                            <div class="mt-1">
+                                <input type="text" name="name" id="name" value="<%= team.name %>" required
+                                       class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                            </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="4" required><%= team.description %></textarea>
+
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                            <div class="mt-1">
+                                <textarea name="description" id="description" rows="3" required
+                                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"><%= team.description %></textarea>
+                            </div>
                         </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Update Team</button>
-                            <a href="/teams/<%= team._id %>" class="btn btn-outline-secondary">Cancel</a>
+
+                        <div class="flex justify-end space-x-3">
+                            <a href="/teams/<%= team._id %>" 
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Cancel
+                            </a>
+                            <button type="submit" 
+                                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Update Team
+                            </button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

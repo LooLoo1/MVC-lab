@@ -4,6 +4,11 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const methodOverride = require('method-override');
 const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const flash = require('connect-flash');
+const { isAuthenticated } = require('./middleware/auth');
+const Notification = require('./models/Notification');
 
 const app = express();
 
@@ -35,13 +40,7 @@ app.use(session({
 }));
 
 // Flash messages middleware
-app.use((req, res, next) => {
-    res.locals.success = req.session.success;
-    res.locals.error = req.session.error;
-    delete req.session.success;
-    delete req.session.error;
-    next();
-});
+app.use(flash());
 
 // Make user available to all views
 app.use(async (req, res, next) => {
@@ -57,31 +56,81 @@ app.use(async (req, res, next) => {
     next();
 });
 
+// Make flash messages available to all views
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
+
+// Import notification controller
+const notificationController = require('./controllers/notificationController');
+
+// Add notification count middleware
+app.use(notificationController.getUnreadCount);
+
 // Database connection
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
-const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const userRoutes = require('./routes/userRoutes');
 
-app.use('/', authRoutes);
-app.use('/projects', projectRoutes);
-app.use('/teams', teamRoutes);
-app.use('/users', userRoutes);
+// User routes (including auth)
+app.use('/', userRoutes);
+
+// Protected routes (authentication required)
+app.use('/projects', isAuthenticated, projectRoutes);
+app.use('/teams', isAuthenticated, teamRoutes);
+app.use('/notifications', isAuthenticated, require('./routes/notificationRoutes'));
 
 // Home route
 app.get('/', (req, res) => {
-    res.redirect('/projects');
+    if (req.session.userId) {
+        res.redirect('/projects');
+    } else {
+        res.redirect('/users/login');
+    }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).render('error', { error: err });
+    
+    // Get unread notifications count for the error page
+    let unreadNotifications = 0;
+    if (res.locals.user) {
+        Notification.countDocuments({ recipient: res.locals.user._id, read: false })
+            .then(count => {
+                unreadNotifications = count;
+                res.status(err.status || 500).render('error', {
+                    message: err.message,
+                    error: process.env.NODE_ENV === 'development' ? err : {},
+                    user: res.locals.user,
+                    unreadNotifications: unreadNotifications
+                });
+            })
+            .catch(() => {
+                // If there's an error getting notifications, still render the error page
+                res.status(err.status || 500).render('error', {
+                    message: err.message,
+                    error: process.env.NODE_ENV === 'development' ? err : {},
+                    user: res.locals.user,
+                    unreadNotifications: 0
+                });
+            });
+    } else {
+        // If no user is logged in, render error page without notifications
+        res.status(err.status || 500).render('error', {
+            message: err.message,
+            error: process.env.NODE_ENV === 'development' ? err : {},
+            user: null,
+            unreadNotifications: 0
+        });
+    }
 });
 
 const PORT = process.env.PORT || 3000;

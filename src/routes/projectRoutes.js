@@ -1,22 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const projectController = require('../controllers/projectController');
-const { isAuthenticated, isProjectOwner } = require('../middleware/auth');
+const { isProjectMember } = require('../middleware/auth');
 
-// Apply authentication middleware to all routes
-router.use(isAuthenticated);
-
-// Project routes
+// Public routes (no membership check needed)
 router.get('/', projectController.getProjects);
-router.get('/new', projectController.getCreateForm);
+router.get('/create', projectController.getCreateForm);
 router.post('/', projectController.createProject);
+
+// Protected routes (require membership)
+router.use('/:id', isProjectMember); // Apply middleware to all routes with project ID
 router.get('/:id', projectController.getProject);
 router.get('/:id/edit', projectController.getEditForm);
 router.put('/:id', projectController.updateProject);
 router.delete('/:id', projectController.deleteProject);
-
-// Project member and progress routes
-router.post('/:id/members', isProjectOwner, projectController.addMember);
-router.post('/:id/progress', projectController.addProgressLog);
+router.post('/:id/members', projectController.addMember);
+router.delete('/:id/members/:memberId', projectController.removeMember);
 
 module.exports = router; 

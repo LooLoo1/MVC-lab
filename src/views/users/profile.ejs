@@ -1,47 +1,148 @@
 <%- include('../partials/header') %>
 
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h2 class="mb-0">Profile</h2>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Name:</strong> <%= user.name %></p>
-                        <p><strong>Email:</strong> <%= user.email %></p>
-                        <p><strong>Member since:</strong> <%= new Date(user.createdAt).toLocaleDateString() %></p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">User Profile</h1>
 
-        <div class="card">
-            <div class="card-header">
-                <h3 class="mb-0">My Projects</h3>
-            </div>
-            <div class="card-body">
-                <% if (user.projects.length === 0) { %>
-                    <p class="text-muted">You haven't created any projects yet.</p>
-                <% } else { %>
-                    <div class="list-group">
-                        <% user.projects.forEach(project => { %>
-                            <a href="/projects/<%= project._id %>" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1"><%= project.title %></h5>
-                                    <small>
-                                        <span class="badge bg-<%= project.status === 'completed' ? 'success' : project.status === 'in-progress' ? 'warning' : 'info' %>">
-                                            <%= project.status %>
-                                        </span>
-                                    </small>
-                                </div>
-                                <p class="mb-1"><%= project.description %></p>
-                                <small>Created: <%= new Date(project.createdAt).toLocaleDateString() %></small>
-                            </a>
-                        <% }); %>
+                <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+                    <div class="mb-4 bg-red-50 border-l-4 border-red-400 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-red-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-red-700">
+                                    <%= error %>
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 <% } %>
+
+                <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+                    <div class="mb-4 bg-green-50 border-l-4 border-green-400 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-check-circle text-green-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-green-700">
+                                    <%= success %>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <div class="space-y-6">
+                    <!-- User Info -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">User Information</h3>
+                        </div>
+                        <div class="border-t border-gray-200">
+                            <dl>
+                                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-sm font-medium text-gray-500">Name</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><%= user.name %></dd>
+                                </div>
+                                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-sm font-medium text-gray-500">Email</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><%= user.email %></dd>
+                                </div>
+                                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt class="text-sm font-medium text-gray-500">Member since</dt>
+                                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><%= new Date(user.createdAt).toLocaleDateString() %></dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- User's Projects -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">My Projects</h3>
+                        </div>
+                        <div class="border-t border-gray-200">
+                            <% if (user.projects && user.projects.length > 0) { %>
+                                <ul class="divide-y divide-gray-200">
+                                    <% user.projects.forEach(project => { %>
+                                        <li class="px-4 py-4 sm:px-6">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm font-medium text-indigo-600 truncate">
+                                                        <a href="/projects/<%= project._id %>"><%= project.title %></a>
+                                                    </p>
+                                                    <p class="mt-1 text-sm text-gray-500 truncate">
+                                                        <%= project.description %>
+                                                    </p>
+                                                </div>
+                                                <div class="ml-4 flex-shrink-0">
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                        <%= project.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                                            project.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 
+                                                            project.status === 'on-hold' ? 'bg-yellow-100 text-yellow-800' : 
+                                                            'bg-gray-100 text-gray-800' %>">
+                                                        <%= project.status %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    <% }); %>
+                                </ul>
+                            <% } else { %>
+                                <div class="px-4 py-5 sm:px-6">
+                                    <p class="text-sm text-gray-500">No projects yet.</p>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- User's Teams -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">My Teams</h3>
+                        </div>
+                        <div class="border-t border-gray-200">
+                            <% if (user.teams && user.teams.length > 0) { %>
+                                <ul class="divide-y divide-gray-200">
+                                    <% user.teams.forEach(team => { %>
+                                        <li class="px-4 py-4 sm:px-6">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm font-medium text-indigo-600 truncate">
+                                                        <a href="/teams/<%= team._id %>"><%= team.name %></a>
+                                                    </p>
+                                                    <p class="mt-1 text-sm text-gray-500 truncate">
+                                                        <%= team.description %>
+                                                    </p>
+                                                </div>
+                                                <div class="ml-4 flex-shrink-0">
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                        <%= team.members ? team.members.length : 0 %> members
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    <% }); %>
+                                </ul>
+                            <% } else { %>
+                                <div class="px-4 py-5 sm:px-6">
+                                    <p class="text-sm text-gray-500">No teams yet.</p>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Edit Profile Button -->
+                    <div class="flex justify-end">
+                        <a href="/users/edit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Edit Profile
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

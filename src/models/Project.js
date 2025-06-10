@@ -32,12 +32,12 @@ const projectSchema = new mongoose.Schema({
     },
     deadline: {
         type: Date,
-        required: true
+        required: [true, 'Project deadline is required']
     },
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: [true, 'Project owner is required']
     },
     members: [{
         type: mongoose.Schema.Types.ObjectId,

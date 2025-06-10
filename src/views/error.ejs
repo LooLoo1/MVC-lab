@@ -1,16 +1,26 @@
 <%- include('partials/header') %>
 
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <div class="card">
-            <div class="card-header bg-danger text-white">
-                <h2 class="mb-0">Error</h2>
-            </div>
-            <div class="card-body">
-                <p class="lead"><%= error.message || error %></p>
-                <div class="text-center mt-4">
-                    <a href="/" class="btn btn-primary">Go Home</a>
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+        <div class="text-center">
+            <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl">
+                Error
+            </h1>
+            <p class="mt-2 text-lg text-gray-600">
+                <%= typeof message !== 'undefined' ? message : 'An error occurred' %>
+            </p>
+            <% if (error && error.stack && process.env.NODE_ENV === 'development') { %>
+                <div class="mt-4 text-left">
+                    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm text-gray-800">
+                        <%= error.stack %>
+                    </pre>
                 </div>
+            <% } %>
+            <div class="mt-6">
+                <a href="/" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-home mr-2"></i>
+                    Return to Home
+                </a>
             </div>
         </div>
     </div>

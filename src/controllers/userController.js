@@ -1,68 +1,139 @@
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
 // Register form
 exports.registerForm = (req, res) => {
-    res.render('users/register');
+    if (req.user) {
+        return res.redirect('/projects');
+    }
+    res.render('users/register', { error: null });
 };
 
 // Register user
 exports.register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
+        console.log('Registration attempt for email:', email);
         
+        // Validate input
+        if (!name || !email || !password) {
+            console.log('Missing required fields');
+            return res.render('users/register', {
+                error: 'Please fill in all required fields',
+                formData: req.body
+            });
+        }
+
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).render('users/register', {
-                error: 'Email already registered'
+            console.log('Email already registered:', email);
+            return res.render('users/register', {
+                error: 'Email already registered',
+                formData: req.body
             });
         }
         
         // Create new user
+        console.log('Creating new user with email:', email);
         const user = new User({ name, email, password });
+        console.log('User object before save:', {
+            name: user.name,
+            email: user.email,
+            password: user.password // This will show the hashed password
+        });
+        
         await user.save();
+        console.log('User saved successfully:', {
+            id: user._id,
+            email: user.email,
+            password: user.password // This will show the final hashed password
+        });
         
         // Set session
         req.session.userId = user._id;
+        req.flash('success', 'Registration successful! Welcome to our platform.');
         
+        console.log('Registration successful for user:', email);
         res.redirect('/projects');
     } catch (error) {
-        res.status(400).render('users/register', { error });
+        console.error('Registration error:', error);
+        res.render('users/register', { 
+            error: 'An error occurred during registration',
+            formData: req.body
+        });
     }
 };
 
 // Login form
 exports.loginForm = (req, res) => {
-    res.render('users/login');
+    if (req.user) {
+        return res.redirect('/projects');
+    }
+    res.render('users/login', { error: null });
 };
 
 // Login user
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log('Login attempt for email:', email);
+        
+        // Validate input
+        if (!email || !password) {
+            console.log('Missing email or password');
+            return res.render('users/login', {
+                error: 'Please fill in all required fields',
+                formData: req.body
+            });
+        }
         
         // Find user
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).render('users/login', {
-                error: 'Invalid email or password'
+            console.log('User not found:', email);
+            return res.render('users/login', {
+                error: 'No account found with this email',
+                formData: req.body
             });
         }
+        console.log('User found:', user.email);
         
         // Check password
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) {
-            return res.status(400).render('users/login', {
-                error: 'Invalid email or password'
+        try {
+            const isMatch = await user.comparePassword(password);
+            console.log('Password match result:', isMatch);
+            
+            if (!isMatch) {
+                console.log('Invalid password for user:', email);
+                return res.render('users/login', {
+                    error: 'Incorrect password. Please try again or use the password you set during registration',
+                    formData: req.body
+                });
+            }
+
+            // Check if password needs to be rehashed
+            await user.checkPasswordRehash();
+            
+            // Set session
+            req.session.userId = user._id;
+            req.flash('success', 'Welcome back!');
+            
+            console.log('Login successful for user:', email);
+            res.redirect('/projects');
+        } catch (error) {
+            console.error('Password comparison error:', error);
+            return res.render('users/login', {
+                error: 'An error occurred during login',
+                formData: req.body
             });
         }
-        
-        // Set session
-        req.session.userId = user._id;
-        
-        res.redirect('/projects');
     } catch (error) {
-        res.status(500).render('users/login', { error });
+        console.error('Login error:', error);
+        res.render('users/login', { 
+            error: 'An error occurred during login',
+            formData: req.body
+        });
     }
 };
 
@@ -70,8 +141,11 @@ exports.login = async (req, res) => {
 exports.logout = (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            return res.status(500).render('error', { error: err });
+            console.error('Logout error:', err);
+            return res.status(500).render('error', { error: 'Error during logout' });
         }
+        res.clearCookie('connect.sid');
+        req.flash('success', 'You have been logged out successfully');
         res.redirect('/users/login');
     });
 };
@@ -79,15 +153,131 @@ exports.logout = (req, res) => {
 // User profile
 exports.profile = async (req, res) => {
     try {
+        console.log('Loading profile for user ID:', req.session.userId);
+        
+        if (!req.session.userId) {
+            console.log('No user ID in session');
+            req.flash('error', 'Please log in to view your profile');
+            return res.redirect('/users/login');
+        }
+
         const user = await User.findById(req.session.userId)
-            .populate('projects');
+            .populate({
+                path: 'projects',
+                select: 'title description status createdAt'
+            })
+            .populate({
+                path: 'teams',
+                select: 'name description members'
+            });
+        
+        console.log('Found user:', user ? 'yes' : 'no');
         
         if (!user) {
-            return res.status(404).render('error', { error: 'User not found' });
+            console.log('User not found in database');
+            req.flash('error', 'User not found');
+            return res.redirect('/users/login');
         }
         
-        res.render('users/profile', { user });
+        // Ensure projects and teams are arrays
+        user.projects = user.projects || [];
+        user.teams = user.teams || [];
+        
+        console.log('User projects count:', user.projects.length);
+        console.log('User teams count:', user.teams.length);
+        
+        // Get flash messages
+        const error = req.flash('error');
+        const success = req.flash('success');
+        
+        res.render('users/profile', { 
+            user,
+            title: 'My Profile',
+            error: error.length > 0 ? error[0] : null,
+            success: success.length > 0 ? success[0] : null
+        });
     } catch (error) {
-        res.status(500).render('error', { error });
+        console.error('Profile error details:', error);
+        req.flash('error', 'Error loading profile');
+        res.redirect('/');
+    }
+};
+
+// Get edit profile form
+exports.getEditProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/login');
+        }
+
+        res.render('users/edit', { 
+            user,
+            title: 'Edit Profile'
+        });
+    } catch (error) {
+        console.error('Error loading edit profile form:', error);
+        req.flash('error', 'Error loading edit profile form');
+        res.redirect('/users/profile');
+    }
+};
+
+// Update user profile
+exports.updateProfile = async (req, res) => {
+    try {
+        const { name, email, currentPassword, newPassword, confirmPassword } = req.body;
+        const user = await User.findById(req.session.userId);
+
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect('/login');
+        }
+
+        // Validate current password
+        const isValidPassword = await user.comparePassword(currentPassword);
+        if (!isValidPassword) {
+            return res.render('users/edit', {
+                user,
+                error: 'Current password is incorrect',
+                title: 'Edit Profile'
+            });
+        }
+
+        // Check if email is already taken by another user
+        if (email !== user.email) {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.render('users/edit', {
+                    user,
+                    error: 'Email is already taken',
+                    title: 'Edit Profile'
+                });
+            }
+        }
+
+        // Update user fields
+        user.name = name;
+        user.email = email;
+
+        // Update password if provided
+        if (newPassword) {
+            if (newPassword !== confirmPassword) {
+                return res.render('users/edit', {
+                    user,
+                    error: 'New passwords do not match',
+                    title: 'Edit Profile'
+                });
+            }
+            user.password = newPassword;
+        }
+
+        await user.save();
+        req.flash('success', 'Profile updated successfully');
+        res.redirect('/users/profile');
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        req.flash('error', 'Error updating profile');
+        res.redirect('/users/profile');
     }
 }; 
