@@ -8,7 +8,16 @@ const Notification = require('../models/Notification');
 exports.getTeams = async (req, res) => {
     try {
         const search = req.query.search || '';
-        const query = search ? { name: { $regex: search, $options: 'i' } } : {};
+        const query = {
+            $or: [
+                { leader: req.session.userId },
+                { 'members.user': req.session.userId }
+            ]
+        };
+        
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
 
         const teams = await Team.find(query)
             .populate('leader', 'name email')
@@ -35,7 +44,6 @@ exports.getTeams = async (req, res) => {
             title: 'Teams'
         });
     } catch (error) {
-        console.error('Error fetching teams:', error);
         req.flash('error', 'Error fetching teams');
         res.redirect('/');
     }
@@ -100,7 +108,6 @@ exports.getTeam = async (req, res) => {
             title: team.name
         });
     } catch (error) {
-        console.error('Error fetching team:', error);
         req.flash('error', 'Error fetching team details');
         res.redirect('/teams');
     }
@@ -194,7 +201,6 @@ exports.deleteTeam = async (req, res) => {
         req.flash('success', 'Team deleted successfully');
         res.redirect('/teams');
     } catch (error) {
-        console.error('Error deleting team:', error);
         req.flash('error', 'Error deleting team');
         res.redirect('/teams');
     }
@@ -257,7 +263,6 @@ exports.addMember = async (req, res) => {
             message: 'Member added successfully'
         });
     } catch (error) {
-        console.error('Error adding team member:', error);
         res.status(500).json({ 
             success: false, 
             error: 'Failed to add team member' 

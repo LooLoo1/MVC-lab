@@ -4,16 +4,12 @@ const User = require('../models/User');
 // Get all notifications for the current user
 exports.getNotifications = async (req, res) => {
     try {
-        console.log('Loading notifications for user:', req.session.userId);
-        
         const notifications = await Notification.find({ recipient: req.session.userId })
             .populate('sender', 'name email')
             .populate('team', 'name')
             .populate('project', 'name')
             .populate('task', 'title')
             .sort({ createdAt: -1 });
-
-        console.log(`Found ${notifications.length} notifications`);
 
         res.render('notifications/index', {
             notifications,
@@ -22,7 +18,6 @@ exports.getNotifications = async (req, res) => {
             success: req.query.success || null
         });
     } catch (error) {
-        console.error('Error loading notifications:', error);
         res.render('notifications/index', {
             notifications: [],
             title: 'Notifications',
@@ -56,7 +51,6 @@ exports.markAsRead = async (req, res) => {
 
         res.json({ success: true });
     } catch (error) {
-        console.error('Error marking notification as read:', error);
         res.status(500).json({ 
             success: false, 
             error: 'Failed to mark notification as read' 
@@ -67,8 +61,6 @@ exports.markAsRead = async (req, res) => {
 // Mark all notifications as read
 exports.markAllAsRead = async (req, res) => {
     try {
-        console.log('Marking all notifications as read for user:', req.session.userId);
-        
         const result = await Notification.updateMany(
             { 
                 recipient: req.session.userId,
@@ -79,14 +71,11 @@ exports.markAllAsRead = async (req, res) => {
             }
         );
 
-        console.log(`Marked ${result.modifiedCount} notifications as read`);
-
         res.json({ 
             success: true,
             message: `Marked ${result.modifiedCount} notifications as read`
         });
     } catch (error) {
-        console.error('Error marking all notifications as read:', error);
         res.status(500).json({ 
             success: false, 
             error: 'Failed to mark notifications as read' 
@@ -117,7 +106,6 @@ exports.deleteNotification = async (req, res) => {
 
         res.json({ success: true });
     } catch (error) {
-        console.error('Error deleting notification:', error);
         res.status(500).json({ 
             success: false, 
             error: 'Failed to delete notification' 
@@ -132,7 +120,6 @@ exports.createNotification = async (data) => {
         await notification.save();
         return notification;
     } catch (error) {
-        console.error('Error creating notification:', error);
         throw error;
     }
 };
@@ -149,7 +136,6 @@ exports.getUnreadCount = async (req, res, next) => {
         }
         next();
     } catch (error) {
-        console.error('Error getting unread notifications count:', error);
         res.locals.unreadNotifications = 0;
         next();
     }
