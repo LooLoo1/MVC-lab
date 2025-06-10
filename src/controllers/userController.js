@@ -158,7 +158,7 @@ exports.profile = async (req, res) => {
         if (!req.session.userId) {
             console.log('No user ID in session');
             req.flash('error', 'Please log in to view your profile');
-            return res.redirect('/users/login');
+            return res.redirect('/login');
         }
 
         const user = await User.findById(req.session.userId)
@@ -176,7 +176,7 @@ exports.profile = async (req, res) => {
         if (!user) {
             console.log('User not found in database');
             req.flash('error', 'User not found');
-            return res.redirect('/users/login');
+            return res.redirect('/login');
         }
         
         // Ensure projects and teams are arrays
@@ -186,15 +186,11 @@ exports.profile = async (req, res) => {
         console.log('User projects count:', user.projects.length);
         console.log('User teams count:', user.teams.length);
         
-        // Get flash messages
-        const error = req.flash('error');
-        const success = req.flash('success');
-        
         res.render('users/profile', { 
             user,
             title: 'My Profile',
-            error: error.length > 0 ? error[0] : null,
-            success: success.length > 0 ? success[0] : null
+            error: req.flash('error')[0] || null,
+            success: req.flash('success')[0] || null
         });
     } catch (error) {
         console.error('Profile error details:', error);
@@ -214,12 +210,14 @@ exports.getEditProfile = async (req, res) => {
 
         res.render('users/edit', { 
             user,
-            title: 'Edit Profile'
+            title: 'Edit Profile',
+            error: req.flash('error')[0] || null,
+            success: req.flash('success')[0] || null
         });
     } catch (error) {
         console.error('Error loading edit profile form:', error);
         req.flash('error', 'Error loading edit profile form');
-        res.redirect('/users/profile');
+        res.redirect('/profile');
     }
 };
 
@@ -232,16 +230,6 @@ exports.updateProfile = async (req, res) => {
         if (!user) {
             req.flash('error', 'User not found');
             return res.redirect('/login');
-        }
-
-        // Validate current password
-        const isValidPassword = await user.comparePassword(currentPassword);
-        if (!isValidPassword) {
-            return res.render('users/edit', {
-                user,
-                error: 'Current password is incorrect',
-                title: 'Edit Profile'
-            });
         }
 
         // Check if email is already taken by another user
@@ -262,6 +250,24 @@ exports.updateProfile = async (req, res) => {
 
         // Update password if provided
         if (newPassword) {
+            // Validate current password only if changing password
+            if (!currentPassword) {
+                return res.render('users/edit', {
+                    user,
+                    error: 'Current password is required to change password',
+                    title: 'Edit Profile'
+                });
+            }
+
+            const isValidPassword = await user.comparePassword(currentPassword);
+            if (!isValidPassword) {
+                return res.render('users/edit', {
+                    user,
+                    error: 'Current password is incorrect',
+                    title: 'Edit Profile'
+                });
+            }
+
             if (newPassword !== confirmPassword) {
                 return res.render('users/edit', {
                     user,
@@ -274,10 +280,10 @@ exports.updateProfile = async (req, res) => {
 
         await user.save();
         req.flash('success', 'Profile updated successfully');
-        res.redirect('/users/profile');
+        res.redirect('/profile');
     } catch (error) {
         console.error('Error updating profile:', error);
         req.flash('error', 'Error updating profile');
-        res.redirect('/users/profile');
+        res.redirect('/profile');
     }
 }; 

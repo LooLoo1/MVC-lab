@@ -11,7 +11,7 @@ router.post('/login', userController.login);
 
 // Protected routes
 router.get('/profile', isAuthenticated, userController.profile);
-router.get('/edit', isAuthenticated, userController.getEditProfile);
+router.get('/profile/edit', isAuthenticated, userController.getEditProfile);
 router.post('/profile', isAuthenticated, userController.updateProfile);
 
 module.exports = router; 
