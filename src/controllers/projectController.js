@@ -6,7 +6,7 @@ exports.getProjects = async (req, res) => {
     try {
         if (!req.session.userId) {
             req.flash('error', 'You must be logged in to view projects');
-            return res.redirect('/login');
+            return res.redirect('/users/login');
         }
 
         const projects = await Project.find({
@@ -80,7 +80,7 @@ exports.createProject = async (req, res) => {
         if (!req.session.userId) {
             console.log('No user ID in session');
             req.flash('error', 'You must be logged in to create a project');
-            return res.redirect('/login');
+            return res.redirect('/users/login');
         }
 
         const { title, description, deadline, status } = req.body;

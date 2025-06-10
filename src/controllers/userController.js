@@ -158,7 +158,7 @@ exports.profile = async (req, res) => {
         if (!req.session.userId) {
             console.log('No user ID in session');
             req.flash('error', 'Please log in to view your profile');
-            return res.redirect('/login');
+            return res.redirect('/users/login');
         }
 
         const user = await User.findById(req.session.userId)
@@ -176,7 +176,7 @@ exports.profile = async (req, res) => {
         if (!user) {
             console.log('User not found in database');
             req.flash('error', 'User not found');
-            return res.redirect('/login');
+            return res.redirect('/users/login');
         }
         
         // Ensure projects and teams are arrays
@@ -195,7 +195,7 @@ exports.profile = async (req, res) => {
     } catch (error) {
         console.error('Profile error details:', error);
         req.flash('error', 'Error loading profile');
-        res.redirect('/');
+        res.redirect('/users/login');
     }
 };
 
@@ -205,7 +205,7 @@ exports.getEditProfile = async (req, res) => {
         const user = await User.findById(req.session.userId);
         if (!user) {
             req.flash('error', 'User not found');
-            return res.redirect('/login');
+            return res.redirect('/users/login');
         }
 
         res.render('users/edit', { 
@@ -217,7 +217,7 @@ exports.getEditProfile = async (req, res) => {
     } catch (error) {
         console.error('Error loading edit profile form:', error);
         req.flash('error', 'Error loading edit profile form');
-        res.redirect('/profile');
+        res.redirect('/users/login');
     }
 };
 
@@ -229,7 +229,7 @@ exports.updateProfile = async (req, res) => {
 
         if (!user) {
             req.flash('error', 'User not found');
-            return res.redirect('/login');
+            return res.redirect('/users/login');
         }
 
         // Check if email is already taken by another user
@@ -280,10 +280,10 @@ exports.updateProfile = async (req, res) => {
 
         await user.save();
         req.flash('success', 'Profile updated successfully');
-        res.redirect('/profile');
+        res.redirect('/users/login');
     } catch (error) {
         console.error('Error updating profile:', error);
         req.flash('error', 'Error updating profile');
-        res.redirect('/profile');
+        res.redirect('/users/login');
     }
 }; 
