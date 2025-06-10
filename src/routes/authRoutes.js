@@ -8,8 +8,8 @@ router.get('/users/login', authController.getLogin);
 router.post('/users/login', authController.postLogin);
 router.get('/users/register', authController.getRegister);
 router.post('/users/register', authController.postRegister);
+router.get('/users/logout', authController.logout);
 
 // Protected routes (authentication required)
-router.get('/users/logout', isAuthenticated, authController.logout);
 
 module.exports = router; 

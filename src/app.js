@@ -28,14 +28,17 @@ const MONGODB_URI = 'mongodb+srv://vam:123@cluster0.rd5knl1.mongodb.net/?retryWr
 // Session configuration
 app.use(session({
     secret: 'your-super-secret-key-change-this-in-production',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     store: MongoStore.create({
         mongoUrl: MONGODB_URI,
         ttl: 14 * 24 * 60 * 60 // = 14 days
     }),
     cookie: {
-        maxAge: 14 * 24 * 60 * 60 * 1000 // = 14 days
+        maxAge: 14 * 24 * 60 * 60 * 1000, // = 14 days
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
     }
 }));
 
@@ -78,8 +81,12 @@ mongoose.connect(MONGODB_URI)
 const projectRoutes = require('./routes/projectRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
 
-// User routes (including auth)
+// Auth routes (including login, register, logout)
+app.use('/', authRoutes);
+
+// User routes
 app.use('/', userRoutes);
 
 // Protected routes (authentication required)
@@ -98,37 +105,32 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Error:', err);
     
     // Get unread notifications count for the error page
     let unreadNotifications = 0;
-    if (res.locals.user) {
-        Notification.countDocuments({ recipient: res.locals.user._id, read: false })
+    const user = res.locals.user || null;
+
+    // If user exists, try to get notification count
+    if (user) {
+        Notification.countDocuments({ recipient: user._id, read: false })
             .then(count => {
                 unreadNotifications = count;
-                res.status(err.status || 500).render('error', {
-                    message: err.message,
-                    error: process.env.NODE_ENV === 'development' ? err : {},
-                    user: res.locals.user,
-                    unreadNotifications: unreadNotifications
-                });
+                renderErrorPage();
             })
             .catch(() => {
-                // If there's an error getting notifications, still render the error page
-                res.status(err.status || 500).render('error', {
-                    message: err.message,
-                    error: process.env.NODE_ENV === 'development' ? err : {},
-                    user: res.locals.user,
-                    unreadNotifications: 0
-                });
+                renderErrorPage();
             });
     } else {
-        // If no user is logged in, render error page without notifications
+        renderErrorPage();
+    }
+
+    function renderErrorPage() {
         res.status(err.status || 500).render('error', {
-            message: err.message,
+            message: err.message || 'An error occurred',
             error: process.env.NODE_ENV === 'development' ? err : {},
-            user: null,
-            unreadNotifications: 0
+            user: user,
+            unreadNotifications: unreadNotifications
         });
     }
 });
