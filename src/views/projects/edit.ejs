@@ -1,38 +1,62 @@
 <%- include('../partials/header') %>
 
-<div class="container mt-4">
-    <h1>Edit Project</h1>
-    
-    <form action="/projects/<%= project._id %>?_method=PUT" method="POST" class="mt-4">
-        <div class="mb-3">
-            <label for="title" class="form-label">Project Title</label>
-            <input type="text" class="form-control" id="title" name="title" value="<%= project.title %>" required>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Edit Project</h2>
+                
+                <form action="/projects/<%= project._id %>?_method=PUT" method="POST" class="space-y-6">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700">Project Title</label>
+                        <div class="mt-1">
+                            <input type="text" name="title" id="title" value="<%= project.title %>" required
+                                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <div class="mt-1">
+                            <textarea name="description" id="description" rows="3" required
+                                      class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"><%= project.description %></textarea>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="deadline" class="block text-sm font-medium text-gray-700">Deadline</label>
+                        <div class="mt-1">
+                            <input type="date" name="deadline" id="deadline" 
+                                   value="<%= project.deadline ? project.deadline.toISOString().split('T')[0] : '' %>" required
+                                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <div class="mt-1">
+                            <select name="status" id="status" required
+                                    class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="planning" <%= project.status === 'planning' ? 'selected' : '' %>>Planning</option>
+                                <option value="in-progress" <%= project.status === 'in-progress' ? 'selected' : '' %>>In Progress</option>
+                                <option value="completed" <%= project.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                                <option value="on-hold" <%= project.status === 'on-hold' ? 'selected' : '' %>>On Hold</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <a href="/projects/<%= project._id %>" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Update Project
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="3" required><%= project.description %></textarea>
-        </div>
-        
-        <div class="mb-3">
-            <label for="deadline" class="form-label">Deadline</label>
-            <input type="date" class="form-control" id="deadline" name="deadline" 
-                value="<%= project.deadline ? project.deadline.toISOString().split('T')[0] : '' %>" required>
-        </div>
-        
-        <div class="mb-3">
-            <label for="status" class="form-label">Status</label>
-            <select class="form-select" id="status" name="status" required>
-                <option value="planning" <%= project.status === 'planning' ? 'selected' : '' %>>Planning</option>
-                <option value="in-progress" <%= project.status === 'in-progress' ? 'selected' : '' %>>In Progress</option>
-                <option value="completed" <%= project.status === 'completed' ? 'selected' : '' %>>Completed</option>
-                <option value="on-hold" <%= project.status === 'on-hold' ? 'selected' : '' %>>On Hold</option>
-            </select>
-        </div>
-        
-        <button type="submit" class="btn btn-primary">Update Project</button>
-        <a href="/projects/<%= project._id %>" class="btn btn-secondary">Cancel</a>
-    </form>
+    </div>
 </div>
 
 <%- include('../partials/footer') %> 
