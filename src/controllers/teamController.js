@@ -61,7 +61,7 @@ exports.createTeam = async (req, res) => {
         await team.save();
         
         req.session.success = 'Team created successfully';
-        res.redirect('/teams');
+        res.redirect(`/teams/${team._id}`);
     } catch (error) {
         req.session.error = 'Error creating team';
         res.redirect('/teams/create');

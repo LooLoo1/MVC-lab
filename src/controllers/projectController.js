@@ -103,7 +103,7 @@ exports.createProject = async (req, res) => {
             deadline: new Date(deadline),
             status: status || 'planning',
             owner: req.session.userId,
-            members: [req.session.userId] // Add owner as a member
+            members: [] // Don't add owner as a member since they are already the owner
         });
         
         console.log('Created project object:', project);
@@ -126,7 +126,7 @@ exports.createProject = async (req, res) => {
         console.log('Updated user:', updatedUser);
         
         req.flash('success', 'Project created successfully');
-        res.redirect('/projects');
+        res.redirect(`/projects/${savedProject._id}`);
     } catch (error) {
         console.error('Error creating project:', error);
         if (error.name === 'ValidationError') {
