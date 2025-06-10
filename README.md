@@ -1,239 +1,168 @@
-# System Zarządzania Projektami Grupowymi
+# Project Management System
 
-Aplikacja internetowa do zarządzania projektami grupowymi zbudowana przy użyciu Node.js, Express.js, MongoDB i EJS.
+A web application for managing group projects built using Node.js, Express.js, MongoDB, and EJS.
 
-## Funkcjonalności
+## Project Description
+This project is an individual work that implements a project management system using the Model-View-Controller (MVC) pattern with Server-Side Rendering (SSR). The application allows users to manage projects, teams, and tasks in a collaborative environment.
 
-### Uwierzytelnianie i Autoryzacja
-- Rejestracja nowych użytkowników z walidacją danych
-- Logowanie z obsługą sesji
-- Wylogowanie z czyszczeniem sesji
-- Ochrona tras przed nieautoryzowanym dostępem
+## Features
 
-### Zarządzanie Projektami
-- Tworzenie nowych projektów z tytułem, opisem i datami
-- Przeglądanie listy projektów z filtrowaniem i sortowaniem
-- Edycja szczegółów projektu
-- Usuwanie projektów (tylko dla administratorów)
-- Śledzenie postępu projektu
+### Authentication and Authorization
+- User registration with data validation
+- Login with session management
+- Logout with session cleanup
+- Route protection against unauthorized access
 
-### Zarządzanie Zespołami
-- Tworzenie zespołów projektowych
-- Dodawanie/usuwanie członków zespołu
-- Przydzielanie ról w zespole
-- Zarządzanie uprawnieniami członków
+### Project Management
+- Create new projects with title, description, and dates
+- Browse project list with filtering and sorting
+- Edit project details
+- Delete projects (admin only)
+- Track project progress
+- Project status tracking (planning, in-progress, completed, on-hold)
 
-### Powiadomienia
-- System powiadomień o zmianach w projektach
-- Powiadomienia o nowych zadaniach
-- Powiadomienia o zmianach statusu
-- Możliwość konfiguracji powiadomień
+### Team Management
+- Create project teams
+- Add/remove team members
+- Assign team roles (member, admin)
+- Manage member permissions
+- Team leader management
 
-### Interfejs Użytkownika
-- Responsywny design dostosowany do urządzeń mobilnych
-- Intuicyjna nawigacja
-- Nowoczesny wygląd z wykorzystaniem Bootstrap 5
-- Dostępność (WCAG 2.1)
+### Notifications
+- Team invitations
+- Project assignments
+- Task assignments
+- Comments and mentions
+- Status updates
 
-## Wymagania Systemowe
+### User Interface
+- Responsive design for mobile devices
+- Intuitive navigation
+- Modern appearance
+- Accessibility (WCAG 2.1)
 
-### Wymagane Wersje
-- Node.js: v14.17.0 lub wyższa (zalecana v16.x LTS)
-- npm: v6.14.0 lub wyższa (zalecana v8.x)
-- MongoDB: v4.4.0 lub wyższa (zalecana v5.x)
-- Przeglądarka: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+## System Requirements
 
-### Wymagania Sprzętowe
-- Procesor: 1.6 GHz lub szybszy
-- RAM: minimum 2GB (zalecane 4GB)
-- Dysk: minimum 1GB wolnego miejsca
-- Połączenie internetowe: minimum 1 Mbps
+### Required Versions
+- Node.js: v22.14.0
+- npm: v10.2.4 or higher
+- MongoDB: v6.17.0 or higher
+- Browser: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
 
-## Instalacja
+### Hardware Requirements
+- CPU: 1.6 GHz or faster
+- RAM: minimum 2GB
+- Storage: minimum 1GB free space
+- Internet connection: minimum 1 Mbps
 
-1. Sklonuj repozytorium:
+## Installation
+
+1. Clone the repository:
 ```bash
-git clone <adres-repozytorium>
-cd system-zarzadzania-projektami
+git clone https://github.com/viburnum/MVC.git
+cd MVC
 ```
 
-2. Zainstaluj zależności:
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Utwórz plik `.env` w głównym katalogu z następującą zawartością:
+3. Create a `.env` file in the root directory with the following content:
 ```
 PORT=3000
-MONGODB_URI=mongodb://localhost:27017/zarzadzanie-projektami
-SESSION_SECRET=twoj-tajny-klucz-zmien-to-w-produkcji
+MONGODB_URI=mongodb://localhost:27017/project-management
+SESSION_SECRET=your-secret-key-change-in-production
 NODE_ENV=development
 ```
 
-4. Uruchom MongoDB:
+4. Start MongoDB:
 ```bash
 mongod
 ```
 
-5. Uruchom aplikację:
+5. Run the application:
 ```bash
-# Tryb deweloperski
+# Development mode
 npm run dev
 
-# Tryb produkcyjny
+# Production mode
 npm start
 ```
 
-Aplikacja będzie dostępna pod adresem `http://localhost:3000`.
+The application will be available at `http://localhost:3000`.
 
-## Struktura MVC
+## MVC Structure
 
-### Modele
-- User.js - model użytkownika, odpowiada za uwierzytelnianie i zarządzanie użytkownikami
-  - Walidacja danych użytkownika
-  - Hashowanie haseł
-  - Zarządzanie sesjami
-- Project.js - model projektu, odpowiada za zarządzanie projektami
-  - Walidacja danych projektu
-  - Relacje z użytkownikami
-  - Śledzenie postępu
-- Team.js - model zespołu, odpowiada za zarządzanie zespołami
-  - Zarządzanie członkami zespołu
-  - Przydzielanie ról
-  - Uprawnienia
-- Notification.js - model powiadomień, odpowiada za powiadomienia systemowe
-  - Typy powiadomień
-  - Status powiadomień
-  - Priorytety
+### Models
+- User.js - user model with authentication and profile management
+- Project.js - project model with status tracking and progress logs
+- Team.js - team model with member management and roles
+- Notification.js - notification model for system events
 
-### Kontrolery
-- authController.js - zarządzanie uwierzytelnianiem i autoryzacją
-  - Rejestracja
-  - Logowanie
-  - Wylogowanie
-  - Odzyskiwanie hasła
-- userController.js - zarządzanie użytkownikami
-  - CRUD operacje
-  - Zarządzanie profilem
-  - Zarządzanie uprawnieniami
-- projectController.js - zarządzanie projektami
-  - CRUD operacje
-  - Zarządzanie zadaniami
-  - Śledzenie postępu
-- teamController.js - zarządzanie zespołami
-  - CRUD operacje
-  - Zarządzanie członkami
-  - Przydzielanie ról
-- notificationController.js - zarządzanie powiadomieniami
-  - Tworzenie powiadomień
-  - Zarządzanie statusem
-  - Filtrowanie
+### Controllers
+- authController.js - authentication management
+- userController.js - user profile and settings management
+- projectController.js - project CRUD operations
+- teamController.js - team management and member operations
+- notificationController.js - notification handling
 
-### Widoki
-- views/users/ - widoki do zarządzania użytkownikami
-  - Rejestracja
-  - Logowanie
-  - Profil
-  - Lista użytkowników
-- views/projects/ - widoki do zarządzania projektami
-  - Lista projektów
-  - Szczegóły projektu
-  - Formularz edycji
-- views/teams/ - widoki do zarządzania zespołami
-  - Lista zespołów
-  - Szczegóły zespołu
-  - Zarządzanie członkami
-- views/notifications/ - widoki powiadomień
-  - Lista powiadomień
-  - Szczegóły powiadomienia
-- views/partials/ - komponenty wielokrotnego użytku
-  - Nagłówek
-  - Stopka
-  - Menu
-  - Formularze
-- views/layouts/ - szablony stron
-  - Główny szablon
-  - Panel administracyjny
-  - Panel użytkownika
+### Views
+- views/users/ - user authentication and profile views
+- views/projects/ - project management views
+- views/teams/ - team management views
+- views/notifications/ - notification views
+- views/partials/ - reusable components
+- views/layouts/ - page layouts
 
-## Przykłady Danych Wejściowych
+## Input Data Examples
 
-### Rejestracja Użytkownika
+### User Registration
 ```json
 {
-  "email": "uzytkownik@przyklad.pl",
-  "password": "bezpieczneHaslo123",
-  "name": "Jan Kowalski",
-  "role": "developer"
+  "name": "John Doe",
+  "email": "user@example.com",
+  "password": "securePassword123"
 }
 ```
 
-### Tworzenie Projektu
+### Project Creation
 ```json
 {
-  "title": "Rozwój Aplikacji Webowej",
-  "description": "Rozwój nowej aplikacji internetowej",
-  "startDate": "2024-03-20",
-  "endDate": "2024-06-20",
-  "teamMembers": ["uzytkownik1@przyklad.pl", "uzytkownik2@przyklad.pl"],
-  "priority": "high",
-  "status": "in-progress"
+  "title": "Web Application Development",
+  "description": "Development of a new web application",
+  "deadline": "2024-06-20",
+  "status": "planning"
 }
 ```
 
-### Tworzenie Zespołu
+### Team Creation
 ```json
 {
-  "name": "Zespół Programistów",
-  "description": "Główny zespół programistów",
-  "members": ["uzytkownik1@przyklad.pl", "uzytkownik2@przyklad.pl"],
-  "roles": {
-    "uzytkownik1@przyklad.pl": "team-lead",
-    "uzytkownik2@przyklad.pl": "developer"
-  }
+  "name": "Development Team",
+  "description": "Main development team",
+  "members": [
+    {
+      "user": "userId",
+      "role": "member"
+    }
+  ]
 }
 ```
 
-## Stylizacja
+## External Libraries Used
+- express (^5.1.0) - Web framework
+- mongoose (^8.15.1) - MongoDB object modeling
+- ejs (^3.1.10) - Template engine
+- bcryptjs (^3.0.2) - Password hashing
+- express-session (^1.18.1) - Session management
+- connect-mongo (^5.1.0) - MongoDB session store
+- connect-flash (^0.1.1) - Flash messages
+- method-override (^3.0.0) - HTTP method override
+- morgan (^1.10.0) - HTTP request logger
+- dotenv (^16.5.0) - Environment variables
+- cookie-parser (^1.4.7) - Cookie parsing
 
-Projekt wykorzystuje Bootstrap 5 do tworzenia nowoczesnego i responsywnego interfejsu. 
-Dodatkowo wykorzystywane są:
-- Własne style CSS dla specyficznych komponentów
-- Responsywny design dla urządzeń mobilnych
-- Nowoczesne komponenty UI (karty, tabele, formularze)
-- Animacje i przejścia
-- Dostępność (WCAG 2.1)
-- Ciemny tryb
-- Dostosowanie do różnych rozmiarów ekranu
+## License
 
-## Wykorzystane Biblioteki Zewnętrzne
-
-### Backend
-- express - framework webowy
-- ejs - silnik szablonów
-- mongoose - ODM dla MongoDB
-- bcryptjs - hashowanie haseł
-- express-session - zarządzanie sesjami
-- connect-mongo - przechowywanie sesji w MongoDB
-- method-override - obsługa metod HTTP
-- morgan - logowanie żądań HTTP
-
-### Frontend
-- bootstrap - framework CSS
-- jquery - manipulacja DOM
-- chart.js - wykresy i statystyki
-- moment.js - obsługa dat
-- sweetalert2 - powiadomienia
-- datatables - zaawansowane tabele
-
-## Współpraca
-
-1. Sforkuj repozytorium
-2. Utwórz swoją gałąź funkcjonalności (`git checkout -b feature/nowa-funkcjonalnosc`)
-3. Zatwierdź swoje zmiany (`git commit -m 'Dodaj nową funkcjonalność'`)
-4. Wypchnij zmiany do gałęzi (`git push origin feature/nowa-funkcjonalnosc`)
-5. Otwórz Pull Request
-
-## Licencja
-
-Ten projekt jest objęty licencją MIT - szczegóły znajdują się w pliku LICENSE. 
+This project is licensed under the MIT License - see the LICENSE file for details. 
