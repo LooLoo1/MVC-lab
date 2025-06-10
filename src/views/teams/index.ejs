@@ -1,7 +1,6 @@
 <%- include('../partials/header') %>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Header -->
     <div class="md:flex md:items-center md:justify-between mb-6">
         <div class="flex-1 min-w-0">
             <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
@@ -9,73 +8,128 @@
             </h2>
         </div>
         <div class="mt-4 flex md:mt-0 md:ml-4">
-            <a href="/teams/create" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <a href="/teams/create" 
+               class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 <i class="fas fa-plus mr-2"></i>
                 Create Team
             </a>
         </div>
     </div>
 
-    <!-- Statistics -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+    <!-- Search Form -->
+    <div class="mb-6">
+        <form action="/teams" method="GET" class="max-w-lg">
+            <div class="flex gap-4">
+                <div class="flex-1">
+                    <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
+                    <div class="mt-1">
+                        <input type="text" 
+                               name="search" 
+                               id="search" 
+                               value="<%= typeof search !== 'undefined' ? search : '' %>"
+                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                               placeholder="Search teams...">
+                    </div>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-search mr-2"></i>
+                        Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <!-- Total Teams -->
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <i class="fas fa-users text-indigo-600 text-3xl"></i>
+                        <i class="fas fa-users text-indigo-600 text-2xl"></i>
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Teams</dt>
-                            <dd class="text-lg font-semibold text-gray-900"><%= stats.total %></dd>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Total Teams
+                            </dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">
+                                    <%= stats.total %>
+                                </div>
+                            </dd>
                         </dl>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Active Teams -->
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-green-600 text-3xl"></i>
+                        <i class="fas fa-check-circle text-green-600 text-2xl"></i>
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Active Teams</dt>
-                            <dd class="text-lg font-semibold text-gray-900"><%= stats.active %></dd>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Active Teams
+                            </dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">
+                                    <%= stats.active %>
+                                </div>
+                            </dd>
                         </dl>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Teams with Projects -->
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <i class="fas fa-project-diagram text-blue-600 text-3xl"></i>
+                        <i class="fas fa-project-diagram text-blue-600 text-2xl"></i>
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Teams with Projects</dt>
-                            <dd class="text-lg font-semibold text-gray-900"><%= stats.withProjects %></dd>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Teams with Projects
+                            </dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">
+                                    <%= stats.withProjects %>
+                                </div>
+                            </dd>
                         </dl>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Inactive Teams -->
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <i class="fas fa-clock text-yellow-600 text-3xl"></i>
+                        <i class="fas fa-pause-circle text-gray-600 text-2xl"></i>
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Inactive Teams</dt>
-                            <dd class="text-lg font-semibold text-gray-900"><%= stats.inactive %></dd>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Inactive Teams
+                            </dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">
+                                    <%= stats.inactive %>
+                                </div>
+                            </dd>
                         </dl>
                     </div>
                 </div>
@@ -83,52 +137,76 @@
         </div>
     </div>
 
-    <!-- Search and Filters -->
-    <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6 mb-6">
-        <form action="/teams" method="GET" class="space-y-4">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                    <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
-                    <div class="mt-1">
-                        <input type="text" name="search" id="search" value="<%= search %>"
-                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                               placeholder="Search teams...">
+    <!-- Additional Stats -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+        <!-- Total Members -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-user-friends text-purple-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Total Members
+                            </dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">
+                                    <%= stats.totalMembers %>
+                                </div>
+                            </dd>
+                        </dl>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select id="status" name="status"
-                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                        <option value="">All Statuses</option>
-                        <option value="active" <%= status === 'active' ? 'selected' : '' %>>Active</option>
-                        <option value="inactive" <%= status === 'inactive' ? 'selected' : '' %>>Inactive</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="sort" class="block text-sm font-medium text-gray-700">Sort By</label>
-                    <select id="sort" name="sort"
-                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                        <option value="">Newest First</option>
-                        <option value="name_asc" <%= sort === 'name_asc' ? 'selected' : '' %>>Name (A-Z)</option>
-                        <option value="name_desc" <%= sort === 'name_desc' ? 'selected' : '' %>>Name (Z-A)</option>
-                        <option value="members_desc" <%= sort === 'members_desc' ? 'selected' : '' %>>Most Members</option>
-                        <option value="members_asc" <%= sort === 'members_asc' ? 'selected' : '' %>>Least Members</option>
-                        <option value="projects_desc" <%= sort === 'projects_desc' ? 'selected' : '' %>>Most Projects</option>
-                        <option value="projects_asc" <%= sort === 'projects_asc' ? 'selected' : '' %>>Least Projects</option>
-                    </select>
+        <!-- Total Projects -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-tasks text-yellow-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Total Projects
+                            </dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">
+                                    <%= stats.totalProjects %>
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <div class="flex justify-end">
-                <button type="submit"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    <i class="fas fa-search mr-2"></i>
-                    Search
-                </button>
+        <!-- Active Projects -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-play-circle text-green-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Active Projects
+                            </dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">
+                                    <%= stats.activeProjects %>
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 
     <!-- Teams List -->
@@ -140,39 +218,37 @@
                 </li>
             <% } else { %>
                 <% teams.forEach(team => { %>
-                    <li class="hover:bg-gray-50 transition-colors duration-150">
-                        <a href="/teams/<%= team._id %>" class="block">
+                    <li>
+                        <a href="/teams/<%= team._id %>" class="block hover:bg-gray-50">
                             <div class="px-4 py-4 sm:px-6">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center">
-                                        <p class="text-sm font-medium text-indigo-600 truncate">
-                                            <%= team.name %>
-                                        </p>
-                                        <div class="ml-2 flex-shrink-0 flex">
-                                            <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= team.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' %>">
-                                                <%= team.status %>
-                                            </p>
+                                        <div class="flex-shrink-0">
+                                            <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                                <span class="text-indigo-600 font-medium">
+                                                    <%= team.name.charAt(0).toUpperCase() %>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                <%= team.name %>
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                <%= team.description %>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="ml-2 flex-shrink-0 flex">
-                                        <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                            <%= team.members.length + 1 %> members
-                                        </p>
-                                        <p class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                            <%= team.projects.length %> projects
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="mt-2 sm:flex sm:justify-between">
-                                    <div class="sm:flex">
-                                        <p class="flex items-center text-sm text-gray-500">
-                                            <i class="fas fa-user mr-1.5 text-gray-400"></i>
-                                            Leader: <%= team.leader.name %>
-                                        </p>
-                                    </div>
-                                    <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                                        <i class="fas fa-calendar mr-1.5 text-gray-400"></i>
-                                        Created <%= new Date(team.createdAt).toLocaleDateString() %>
+                                    <div class="flex items-center space-x-4">
+                                        <div class="text-sm text-gray-500">
+                                            <i class="fas fa-user-friends mr-1"></i>
+                                            <%= team.members ? team.members.length : 0 %> members
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            <i class="fas fa-project-diagram mr-1"></i>
+                                            <%= team.projects ? team.projects.length : 0 %> projects
+                                        </div>
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
                                     </div>
                                 </div>
                             </div>

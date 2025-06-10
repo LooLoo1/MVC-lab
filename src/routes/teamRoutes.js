@@ -7,7 +7,7 @@ const { isAuthenticated } = require('../middleware/auth');
 router.use(isAuthenticated);
 
 // Team routes
-router.get('/', teamController.getAllTeams);
+router.get('/', teamController.getTeams);
 router.get('/create', teamController.getCreateTeam);
 router.post('/', teamController.createTeam);
 router.get('/:id', teamController.getTeam);

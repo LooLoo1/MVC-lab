@@ -5,73 +5,39 @@ const notificationController = require('./notificationController');
 const Notification = require('../models/Notification');
 
 // Get all teams
-exports.getAllTeams = async (req, res) => {
+exports.getTeams = async (req, res) => {
     try {
-        const { search, status, sort } = req.query;
-        let query = {
-            $or: [
-                { leader: req.session.userId },
-                { 'members.user': req.session.userId }
-            ]
-        };
-
-        // Search by name or description
-        if (search) {
-            query.$and = [{
-                $or: [
-                    { name: { $regex: search, $options: 'i' } },
-                    { description: { $regex: search, $options: 'i' } }
-                ]
-            }];
-        }
-
-        // Filter by status (active/inactive)
-        if (status) {
-            query.status = status;
-        }
-
-        // Build sort object
-        let sortObj = { createdAt: -1 }; // Default sort by newest
-        if (sort) {
-            switch (sort) {
-                case 'name_asc':
-                    sortObj = { name: 1 };
-                    break;
-                case 'name_desc':
-                    sortObj = { name: -1 };
-                    break;
-                case 'members_asc':
-                    sortObj = { 'members.length': 1 };
-                    break;
-                case 'members_desc':
-                    sortObj = { 'members.length': -1 };
-                    break;
-            }
-        }
+        const search = req.query.search || '';
+        const query = search ? { name: { $regex: search, $options: 'i' } } : {};
 
         const teams = await Team.find(query)
-            .sort(sortObj)
             .populate('leader', 'name email')
-            .populate('members.user', 'name email');
+            .populate('members.user', 'name email')
+            .populate('projects', 'name status')
+            .sort({ createdAt: -1 });
 
-        // Get team statistics
+        // Calculate statistics
         const stats = {
             total: teams.length,
-            active: teams.filter(t => t.status === 'active').length,
-            inactive: teams.filter(t => t.status === 'inactive').length
+            active: teams.filter(team => team.projects && team.projects.length > 0).length,
+            withProjects: teams.filter(team => team.projects && team.projects.length > 0).length,
+            inactive: teams.filter(team => !team.projects || team.projects.length === 0).length,
+            totalMembers: teams.reduce((acc, team) => acc + (team.members ? team.members.length : 0), 0),
+            totalProjects: teams.reduce((acc, team) => acc + (team.projects ? team.projects.length : 0), 0),
+            activeProjects: teams.reduce((acc, team) => 
+                acc + (team.projects ? team.projects.filter(p => p.status === 'active').length : 0), 0)
         };
 
-        res.render('teams/index', { 
+        res.render('teams/index', {
             teams,
             stats,
             search,
-            status,
-            sort,
-            userId: req.session.userId
+            title: 'Teams'
         });
     } catch (error) {
         console.error('Error fetching teams:', error);
-        res.status(500).render('error', { error });
+        req.flash('error', 'Error fetching teams');
+        res.redirect('/');
     }
 };
 
