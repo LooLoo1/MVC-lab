@@ -208,13 +208,22 @@ exports.addMember = async (req, res) => {
         if (!project) {
             return res.status(404).render('error', { error: 'Project not found' });
         }
+
+        // Check if user is trying to add themselves
+        if (user._id.toString() === req.session.userId) {
+            req.flash('error', 'You cannot add yourself as a member');
+            return res.redirect(`/projects/${project._id}`);
+        }
         
         await project.addMember(user._id);
         await user.updateOne({ $push: { projects: project._id } });
         
+        req.flash('success', 'Member added successfully');
         res.redirect(`/projects/${project._id}`);
     } catch (error) {
-        res.status(500).render('error', { error });
+        console.error('Error adding member:', error);
+        req.flash('error', 'Failed to add member');
+        res.redirect(`/projects/${req.params.id}`);
     }
 };
 
