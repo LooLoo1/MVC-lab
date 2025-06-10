@@ -84,9 +84,19 @@ exports.getTeam = async (req, res) => {
         // Check if current user is the team leader
         const isLeader = team.leader && team.leader._id.toString() === req.session.userId;
 
+        // Get available projects that are not already in the team
+        const availableProjects = isLeader ? await Project.find({
+            _id: { $nin: team.projects },
+            $or: [
+                { owner: req.session.userId },
+                { members: req.session.userId }
+            ]
+        }).select('title description') : [];
+
         res.render('teams/show', {
             team,
             isLeader,
+            availableProjects,
             title: team.name
         });
     } catch (error) {

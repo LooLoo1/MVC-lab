@@ -22,19 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Confirm delete
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteButtons = document.querySelectorAll('.delete-confirm');
-    
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', event => {
-            if (!confirm('Are you sure you want to delete this item?')) {
-                event.preventDefault();
-            }
-        });
-    });
-});
-
 // Auto-hide alerts
 document.addEventListener('DOMContentLoaded', function() {
     const alerts = document.querySelectorAll('.alert');
