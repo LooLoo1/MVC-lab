@@ -1,0 +1,40 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Projects</h1>
+        <a href="/projects/new" class="btn btn-primary">Create New Project</a>
+    </div>
+
+    <% if (projects.length === 0) { %>
+        <div class="alert alert-info">
+            No projects found. Create your first project!
+        </div>
+    <% } else { %>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <% projects.forEach(project => { %>
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><%= project.title %></h5>
+                            <p class="card-text"><%= project.description.substring(0, 100) %>...</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-<%= project.status === 'completed' ? 'success' : 
+                                                    project.status === 'in-progress' ? 'primary' : 
+                                                    project.status === 'on-hold' ? 'warning' : 'secondary' %>">
+                                    <%= project.status.charAt(0).toUpperCase() + project.status.slice(1) %>
+                                </span>
+                                <small class="text-muted">Due: <%= new Date(project.deadline).toLocaleDateString() %></small>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="/projects/<%= project._id %>" class="btn btn-outline-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    <% } %>
+</div>
+
+<%- include('../partials/footer') %> 

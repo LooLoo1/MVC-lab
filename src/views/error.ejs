@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h2 class="mb-0">Error</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead"><%= error.message || error %></p>
+                <div class="text-center mt-4">
+                    <a href="/" class="btn btn-primary">Go Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %> 

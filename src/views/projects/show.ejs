@@ -1,0 +1,63 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><%= project.title %></h1>
+            <p class="text-muted">
+                Created by <%= project.owner.name %> on <%= new Date(project.createdAt).toLocaleDateString() %>
+            </p>
+        </div>
+        <div class="col text-end">
+            <% if (project.owner._id.toString() === userId) { %>
+                <a href="/projects/<%= project._id %>/edit" class="btn btn-warning">Edit Project</a>
+                <form action="/projects/<%= project._id %>?_method=DELETE" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this project?')">Delete Project</button>
+                </form>
+            <% } %>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Description</h5>
+                    <p class="card-text"><%= project.description %></p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Project Details</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-<%= project.status === 'completed' ? 'success' : 
+                                                    project.status === 'in-progress' ? 'primary' : 
+                                                    project.status === 'on-hold' ? 'warning' : 'secondary' %>">
+                                    <%= project.status.charAt(0).toUpperCase() + project.status.slice(1) %>
+                                </span>
+                            </p>
+                            <p><strong>Deadline:</strong> <%= new Date(project.deadline).toLocaleDateString() %></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Project Owner</h5>
+                    <p class="card-text">
+                        <strong>Name:</strong> <%= project.owner.name %><br>
+                        <strong>Email:</strong> <%= project.owner.email %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %> 
