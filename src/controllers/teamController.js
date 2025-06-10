@@ -60,10 +60,10 @@ exports.createTeam = async (req, res) => {
         await team.addMember(req.user._id, 'admin');
         await team.save();
         
-        req.session.success = 'Team created successfully';
+        req.flash('success', 'Team created successfully');
         res.redirect(`/teams/${team._id}`);
     } catch (error) {
-        req.session.error = 'Error creating team';
+        req.flash('error', 'Error creating team');
         res.redirect('/teams/create');
     }
 };
@@ -112,7 +112,7 @@ exports.getEditTeam = async (req, res) => {
         const team = await Team.findById(req.params.id);
         
         if (!team) {
-            req.session.error = 'Team not found';
+            req.flash('error', 'Team not found');
             return res.redirect('/teams');
         }
         
@@ -124,13 +124,13 @@ exports.getEditTeam = async (req, res) => {
         );
         
         if (!isLeader && !isAdmin) {
-            req.session.error = 'You do not have permission to edit this team';
+            req.flash('error', 'You do not have permission to edit this team');
             return res.redirect('/teams');
         }
         
         res.render('teams/edit', { team });
     } catch (error) {
-        req.session.error = 'Error fetching team';
+        req.flash('error', 'Error fetching team');
         res.redirect('/teams');
     }
 };
@@ -142,7 +142,7 @@ exports.updateTeam = async (req, res) => {
         const team = await Team.findById(req.params.id);
         
         if (!team) {
-            req.session.error = 'Team not found';
+            req.flash('error', 'Team not found');
             return res.redirect('/teams');
         }
         
@@ -154,7 +154,7 @@ exports.updateTeam = async (req, res) => {
         );
         
         if (!isLeader && !isAdmin) {
-            req.session.error = 'You do not have permission to edit this team';
+            req.flash('error', 'You do not have permission to edit this team');
             return res.redirect('/teams');
         }
         
@@ -162,10 +162,10 @@ exports.updateTeam = async (req, res) => {
         team.description = description;
         await team.save();
         
-        req.session.success = 'Team updated successfully';
+        req.flash('success', 'Team updated successfully');
         res.redirect(`/teams/${team._id}`);
     } catch (error) {
-        req.session.error = 'Error updating team';
+        req.flash('error', 'Error updating team');
         res.redirect('/teams');
     }
 };
@@ -176,21 +176,26 @@ exports.deleteTeam = async (req, res) => {
         const team = await Team.findById(req.params.id);
         
         if (!team) {
-            req.session.error = 'Team not found';
+            req.flash('error', 'Team not found');
             return res.redirect('/teams');
         }
         
-        // Only team leader can delete the team
-        if (team.leader.toString() !== req.user._id.toString()) {
-            req.session.error = 'Only team leader can delete the team';
+        // Allow only team leader or admin to delete the team
+        const isLeader = team.leader.toString() === req.user._id.toString();
+        const isAdmin = team.members.some(member => 
+            member.user.toString() === req.user._id.toString() && member.role === 'admin'
+        );
+        if (!isLeader && !isAdmin) {
+            req.flash('error', 'Only team leader or admin can delete the team');
             return res.redirect('/teams');
         }
         
-        await team.remove();
-        req.session.success = 'Team deleted successfully';
+        await Team.findByIdAndDelete(team._id);
+        req.flash('success', 'Team deleted successfully');
         res.redirect('/teams');
     } catch (error) {
-        req.session.error = 'Error deleting team';
+        console.error('Error deleting team:', error);
+        req.flash('error', 'Error deleting team');
         res.redirect('/teams');
     }
 };
@@ -306,68 +311,42 @@ exports.removeMember = async (req, res) => {
 };
 
 // Add project to team
-exports.addProject = async (req, res) => {
+exports.addProjectToTeam = async (req, res) => {
     try {
         const team = await Team.findById(req.params.id);
+        
         if (!team) {
-            req.session.error = 'Team not found';
+            req.flash('error', 'Team not found');
             return res.redirect('/teams');
         }
-
-        // Check if user has permission
-        if (team.leader._id.toString() !== req.user._id.toString() && 
-            !team.members.some(m => m.user._id.toString() === req.user._id.toString() && m.role === 'admin')) {
-            req.session.error = 'Not authorized to add projects';
+        
+        // Only team leader can add projects
+        if (team.leader.toString() !== req.user._id.toString()) {
+            req.flash('error', 'Not authorized to add projects');
             return res.redirect('/teams');
         }
-
-        const { projectId } = req.body;
-        const project = await Project.findById(projectId);
+        
+        const project = await Project.findById(req.body.projectId);
         
         if (!project) {
-            req.session.error = 'Project not found';
+            req.flash('error', 'Project not found');
             return res.redirect('/teams');
         }
-
-        // Check if project is already assigned to the team
-        if (team.projects.includes(projectId)) {
-            req.session.error = 'Project is already assigned to this team';
+        
+        // Check if project is already in the team
+        if (team.projects.includes(project._id)) {
+            req.flash('error', 'Project is already assigned to this team');
             return res.redirect('/teams');
         }
-
-        team.projects.push(projectId);
+        
+        // Add project to team
+        team.projects.push(project._id);
         await team.save();
-
-        // Send notifications to all team members
-        const notifications = team.members.map(member => ({
-            recipient: member.user,
-            sender: req.user._id,
-            type: 'project_assigned',
-            title: 'New Project Assigned',
-            message: `Project "${project.title}" has been assigned to your team "${team.name}"`,
-            link: `/projects/${project._id}`,
-            team: team._id,
-            project: project._id
-        }));
-
-        // Also notify the team leader
-        notifications.push({
-            recipient: team.leader._id,
-            sender: req.user._id,
-            type: 'project_assigned',
-            title: 'New Project Assigned',
-            message: `Project "${project.title}" has been assigned to your team "${team.name}"`,
-            link: `/projects/${project._id}`,
-            team: team._id,
-            project: project._id
-        });
-
-        await Promise.all(notifications.map(n => notificationController.createNotification(n)));
-
-        req.session.success = 'Project added to team successfully';
+        
+        req.flash('success', 'Project added to team successfully');
         res.redirect(`/teams/${team._id}`);
     } catch (error) {
-        req.session.error = 'Error adding project to team';
+        req.flash('error', 'Error adding project to team');
         res.redirect('/teams');
     }
 };

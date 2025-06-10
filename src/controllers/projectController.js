@@ -182,15 +182,20 @@ exports.deleteProject = async (req, res) => {
     try {
         const project = await Project.findById(req.params.id);
         if (!project) {
-            return res.status(404).render('error', { error: 'Project not found' });
+            req.flash('error', 'Project not found');
+            return res.redirect('/projects');
         }
         if (project.owner.toString() !== req.session.userId) {
-            return res.status(403).render('error', { error: 'Not authorized' });
+            req.flash('error', 'Not authorized to delete this project');
+            return res.redirect('/projects');
         }
         await Project.findByIdAndDelete(req.params.id);
+        req.flash('success', 'Project deleted successfully');
         res.redirect('/projects');
     } catch (error) {
-        res.status(500).render('error', { error });
+        console.error('Error deleting project:', error);
+        req.flash('error', 'Failed to delete project');
+        res.redirect('/projects');
     }
 };
 

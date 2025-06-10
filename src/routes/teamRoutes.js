@@ -20,7 +20,7 @@ router.post('/:id/members', teamController.addMember);
 router.delete('/:id/members/:memberId', teamController.removeMember);
 
 // Team project management routes
-router.post('/:id/projects', teamController.addProject);
+router.post('/:id/projects', teamController.addProjectToTeam);
 router.delete('/:id/projects/:projectId', teamController.removeProject);
 
 module.exports = router; 
