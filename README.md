@@ -59,8 +59,8 @@ This project is an individual work that implements a project management system u
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/viburnum/MVC.git
-cd MVC
+git clone https://github.com/LooLoo1/MVC-lab
+cd MVC-lab
 ```
 
 2. Install dependencies:
@@ -71,17 +71,12 @@ npm install
 3. Create a `.env` file in the root directory with the following content:
 ```
 PORT=3000
-MONGODB_URI=mongodb://localhost:27017/project-management
+MONGODB_URI=mongodb+srv://vam:123@cluster0.rd5knl1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 SESSION_SECRET=your-secret-key-change-in-production
 NODE_ENV=development
 ```
 
-4. Start MongoDB:
-```bash
-mongod
-```
-
-5. Run the application:
+4. Run the application:
 ```bash
 # Development mode
 npm run dev
@@ -162,7 +157,3 @@ The application will be available at `http://localhost:3000`.
 - morgan (^1.10.0) - HTTP request logger
 - dotenv (^16.5.0) - Environment variables
 - cookie-parser (^1.4.7) - Cookie parsing
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
