@@ -321,38 +321,59 @@ exports.addProjectToTeam = async (req, res) => {
         const team = await Team.findById(req.params.id);
         
         if (!team) {
-            req.flash('error', 'Team not found');
-            return res.redirect('/teams');
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Team not found' 
+            });
         }
         
         // Only team leader can add projects
         if (team.leader.toString() !== req.user._id.toString()) {
-            req.flash('error', 'Not authorized to add projects');
-            return res.redirect('/teams');
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Not authorized to add projects' 
+            });
         }
         
-        const project = await Project.findById(req.body.projectId);
+        const projectId = req.body.projectId;
+        if (!projectId) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Project ID is required' 
+            });
+        }
+        
+        const project = await Project.findById(projectId);
         
         if (!project) {
-            req.flash('error', 'Project not found');
-            return res.redirect('/teams');
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Project not found' 
+            });
         }
         
         // Check if project is already in the team
         if (team.projects.includes(project._id)) {
-            req.flash('error', 'Project is already assigned to this team');
-            return res.redirect('/teams');
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Project is already assigned to this team' 
+            });
         }
         
         // Add project to team
         team.projects.push(project._id);
         await team.save();
         
-        req.flash('success', 'Project added to team successfully');
-        res.redirect(`/teams/${team._id}`);
+        return res.json({ 
+            success: true, 
+            message: 'Project added to team successfully' 
+        });
     } catch (error) {
-        req.flash('error', 'Error adding project to team');
-        res.redirect('/teams');
+        console.error('Error adding project to team:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: 'Error adding project to team' 
+        });
     }
 };
 

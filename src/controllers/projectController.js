@@ -79,6 +79,9 @@ exports.createProject = async (req, res) => {
 
         if (!req.session.userId) {
             console.log('No user ID in session');
+            if (req.xhr || req.headers.accept.includes('application/json')) {
+                return res.status(401).json({ success: false, error: 'You must be logged in to create a project' });
+            }
             req.flash('error', 'You must be logged in to create a project');
             return res.redirect('/users/login');
         }
@@ -89,6 +92,9 @@ exports.createProject = async (req, res) => {
         // Validate required fields
         if (!title || !description || !deadline) {
             console.log('Missing required fields:', { title, description, deadline });
+            if (req.xhr || req.headers.accept.includes('application/json')) {
+                return res.status(400).json({ success: false, error: 'Please fill in all required fields' });
+            }
             req.flash('error', 'Please fill in all required fields');
             return res.render('projects/create', { 
                 error: 'Please fill in all required fields',
@@ -125,16 +131,30 @@ exports.createProject = async (req, res) => {
         );
         console.log('Updated user:', updatedUser);
         
+        if (req.xhr || req.headers.accept.includes('application/json')) {
+            return res.json({ 
+                success: true, 
+                message: 'Project created successfully',
+                project: savedProject
+            });
+        }
+        
         req.flash('success', 'Project created successfully');
         res.redirect(`/projects/${savedProject._id}`);
     } catch (error) {
         console.error('Error creating project:', error);
         if (error.name === 'ValidationError') {
             console.log('Validation error:', error);
+            if (req.xhr || req.headers.accept.includes('application/json')) {
+                return res.status(400).json({ success: false, error: 'Please fill in all required fields correctly' });
+            }
             return res.render('projects/create', { 
                 error: 'Please fill in all required fields correctly',
                 formData: req.body
             });
+        }
+        if (req.xhr || req.headers.accept.includes('application/json')) {
+            return res.status(500).json({ success: false, error: 'Failed to create project' });
         }
         req.flash('error', 'Failed to create project');
         res.render('projects/create', { 
