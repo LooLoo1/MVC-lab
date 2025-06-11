@@ -59,8 +59,8 @@
                                     <div class="text-sm text-gray-500">
                                         <%= member.user.email %>
                                     </div>
-                                    <div class="text-xs text-gray-400">
-                                        <%= member.role %>
+                                    <div class="text-xs <%= member.role === 'admin' ? 'text-indigo-600 font-semibold' : 'text-gray-400' %>">
+                                        <%= member.role.charAt(0).toUpperCase() + member.role.slice(1) %>
                                     </div>
                                 </div>
                             </div>
