@@ -52,16 +52,15 @@
                             <div class="flex items-center space-x-4">
                                 <% if (notification.link) { %>
                                     <a href="<%= notification.link %>" 
+                                       onclick="markAsRead('<%= notification._id %>')"
                                        class="text-indigo-600 hover:text-indigo-900">
                                         <i class="fas fa-external-link-alt"></i>
                                     </a>
                                 <% } %>
-                                <form action="/notifications/<%= notification._id %>?_method=DELETE" method="POST" class="inline">
-                                    <button type="submit" 
-                                            class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button onclick="deleteNotification('<%= notification._id %>')"
+                                        class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
                     </li>
@@ -76,22 +75,153 @@ function markAllAsRead() {
     fetch('/notifications/read-all', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Failed to mark notifications as read');
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             window.location.reload();
         } else {
-            window.location.href = '/notifications?error=' + encodeURIComponent(data.error || 'Failed to mark notifications as read');
+            throw new Error(data.error || 'Failed to mark notifications as read');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        window.location.href = '/notifications?error=' + encodeURIComponent('Failed to mark notifications as read');
+        showError(error.message || 'Failed to mark notifications as read');
     });
 }
+
+function markAsRead(notificationId) {
+    fetch(`/notifications/${notificationId}/read`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Failed to mark notification as read');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            const unreadDot = notification.querySelector('.h-2.w-2');
+            if (unreadDot) {
+                unreadDot.remove();
+            }
+        } else {
+            throw new Error(data.error || 'Failed to mark notification as read');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError(error.message || 'Failed to mark notification as read');
+    });
+}
+
+function deleteNotification(notificationId) {
+    fetch(`/notifications/${notificationId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Failed to delete notification');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            notification.remove();
+            showSuccess('Notification deleted successfully');
+        } else {
+            throw new Error(data.error || 'Failed to delete notification');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError(error.message || 'Failed to delete notification');
+    });
+}
+
+function showSuccess(message) {
+    const successMessage = document.createElement('div');
+    successMessage.className = 'fixed top-4 right-4 bg-green-50 border-l-4 border-green-400 p-4 z-50 animate-fade-in-down';
+    successMessage.innerHTML = `
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-check-circle text-green-400"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-green-700">
+                    ${message}
+                </p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(successMessage);
+    setTimeout(() => {
+        successMessage.remove();
+    }, 3000);
+}
+
+function showError(message) {
+    const errorMessage = document.createElement('div');
+    errorMessage.className = 'fixed top-4 right-4 bg-red-50 border-l-4 border-red-400 p-4 z-50 animate-fade-in-down';
+    errorMessage.innerHTML = `
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-circle text-red-400"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700">
+                    ${message}
+                </p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(errorMessage);
+    setTimeout(() => {
+        errorMessage.remove();
+    }, 3000);
+}
 </script>
+
+<style>
+@keyframes fade-in-down {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-down {
+    animation: fade-in-down 0.3s ease-out;
+}
+</style>
 
 <%- include('../partials/footer') %> 
