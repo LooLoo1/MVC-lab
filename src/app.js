@@ -87,7 +87,7 @@ const authRoutes = require('./routes/authRoutes');
 app.use('/', authRoutes);
 
 // User routes
-app.use('/', userRoutes);
+app.use('/users', userRoutes);
 
 // Protected routes (authentication required)
 app.use('/projects', isAuthenticated, projectRoutes);
