@@ -65,12 +65,10 @@
                                 </div>
                             </div>
                             <% if (isLeader && member.user._id.toString() !== team.leader._id.toString()) { %>
-                                <form action="/teams/<%= team._id %>/members/<%= member.user._id %>?_method=DELETE" method="POST" class="inline">
-                                    <button type="submit" 
-                                            class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-user-minus"></i>
-                                    </button>
-                                </form>
+                                <button onclick="removeMember('<%= member.user._id %>')" 
+                                        class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-user-minus"></i>
+                                </button>
                             <% } %>
                         </div>
                     </li>
@@ -474,6 +472,30 @@ function createProject() {
     .catch(error => {
         console.error('Error:', error);
         showError(error.message || 'Failed to create project');
+    });
+}
+
+function removeMember(memberId) {
+    fetch(`/teams/<%= team._id %>/members/${memberId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const memberElement = document.querySelector(`[data-member-id="${memberId}"]`);
+            memberElement.remove();
+            showSuccess('Member removed successfully');
+        } else {
+            showError(data.error || 'Failed to remove member');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Failed to remove member');
     });
 }
 </script>
